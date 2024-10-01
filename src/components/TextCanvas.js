@@ -1,8 +1,4 @@
- 
-
-
-
- import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 const TextCanvas = () => {
   const [texts, setTexts] = useState([]);
@@ -12,13 +8,11 @@ const TextCanvas = () => {
   const [inputValue, setInputValue] = useState('');
   const [draggingId, setDraggingId] = useState(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [selectedTextId, setSelectedTextId] = useState(null);
-  const [fontSize, setFontSize] = useState(16); // Add state to manage font size
   const inputRef = useRef();
 
-  // Add text item with customizable font size
+  // Add text item
   const addText = () => {
-    const newText = { id: Date.now(), value: 'New Text', x: 50, y: 50, fontSize };
+    const newText = { id: Date.now(), value: 'New Text', x: 50, y: 50 };
     setHistory([...history, texts]);
     setTexts([...texts, newText]);
     setFuture([]);
@@ -29,6 +23,7 @@ const TextCanvas = () => {
     const textToEdit = texts.find(text => text.id === id);
     setEditingText(id);
     setInputValue(textToEdit.value);
+    inputRef.current.focus();
   };
 
   // Update text value
@@ -40,13 +35,6 @@ const TextCanvas = () => {
     setHistory([...history, texts]);
     setFuture([]);
   };
-
-  // Focus the input after it's rendered
-  useEffect(() => {
-    if (editingText !== null && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingText]);
 
   // Handle drag start
   const handleDragStart = (id, e) => {
@@ -94,40 +82,11 @@ const TextCanvas = () => {
     }
   };
 
-  // Handle font size change dynamically for the selected text
-  const handleFontSizeChange = (e) => {
-    const newSize = parseInt(e.target.value, 10);
-    setFontSize(newSize);
-
-    if (selectedTextId !== null) {
-      setTexts(texts.map(text => 
-        text.id === selectedTextId ? { ...text, fontSize: newSize } : text
-      ));
-      setHistory([...history, texts]);
-      setFuture([]);
-    }
-  };
-
   return (
     <div className="w-full h-screen p-5 bg-gray-100">
       {/* Toolbar */}
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4 flex justify-between">
         <button onClick={addText} className="bg-blue-500 text-white px-4 py-2 rounded">Add Text</button>
-
-        {/* Font size selector */}
-        <div className="flex items-center">
-          <label htmlFor="fontSize" className="mr-2">Font Size:</label>
-          <input
-            id="fontSize"
-            type="number"
-            value={fontSize}
-            onChange={handleFontSizeChange}
-            className="border rounded px-2 py-1"
-            min="10"
-            max="100"
-          />
-        </div>
-
         <div>
           <button onClick={undo} disabled={!history.length} className="bg-gray-500 text-white px-4 py-2 rounded mx-1">
             Undo
@@ -140,7 +99,7 @@ const TextCanvas = () => {
 
       {/* Canvas Area */}
       <div
-        className="relative w-full h-3/4 bg-white border rounded shadow-sm p-5 overflow-hidden"
+        className="relative w-full h-full bg-white border rounded shadow-sm p-5 overflow-hidden"
         onMouseMove={handleDrag}
         onMouseUp={handleDragEnd}
       >
@@ -148,9 +107,9 @@ const TextCanvas = () => {
           <div
             key={text.id}
             className="absolute cursor-pointer"
-            style={{ top: `${text.y}px`, left: `${text.x}px`, fontSize: `${text.fontSize}px` }}
+            style={{ top: `${text.y}px`, left: `${text.x}px` }}
             onMouseDown={(e) => handleDragStart(text.id, e)}
-            onClick={() => { handleEditText(text.id); setSelectedTextId(text.id); }}
+            onClick={() => handleEditText(text.id)}
           >
             {editingText === text.id ? (
               <input
@@ -162,7 +121,7 @@ const TextCanvas = () => {
                 onKeyDown={(e) => e.key === 'Enter' && updateText(text.id)}
               />
             ) : (
-              <span>{text.value}</span>
+              <span className="text-xl">{text.value}</span>
             )}
           </div>
         ))}
